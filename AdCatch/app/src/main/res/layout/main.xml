@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:weightSum="1"
+    android:background="#0b6177">
+
+    <ImageView
+        android:layout_width="160dp"
+        android:layout_height="117dp"
+        android:id="@+id/imageView"
+        android:layout_gravity="top|center_horizontal"
+        android:contentDescription=""
+        android:background="@mipmap/ico"
+        android:layout_weight="0.18" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start"
+        android:id="@+id/start"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="0.16" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:id="@+id/stop"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="0.16" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="About"
+        android:id="@+id/about"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="0.15" />
+
+    <Button
+        android:layout_width="164dp"
+        android:layout_height="wrap_content"
+        android:text="Exit"
+        android:id="@+id/exit"
+        android:layout_gravity="center_horizontal" />
+
+</LinearLayout>
