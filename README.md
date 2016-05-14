@@ -26,6 +26,11 @@ Program/Ad_Catch.apk
 
 ( Restart your phone if necessary )
 
+### UNINSTALL
+
+- MAKE SURE THE SERVICE IS STOPPED WHEN YOU WILL UNINSTALL THIS APP
+(ok, now i am in peace with my own conscience)
+
 ### THANKS 
 
 -[Dan Pollock](http://someonewhocares.org/), for the host file
