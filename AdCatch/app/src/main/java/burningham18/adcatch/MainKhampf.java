@@ -28,7 +28,7 @@ public class MainKhampf extends Activity {
     public Button start, stop, about, exit;
     final String original = "/etc/hosts";
     final String backup = "/etc/hosts.AdCatch";
-    final String temp = "/mnt/sdcard/hosts.tmp";
+    final String temp = Environment.getExternalStorageDirectory().getPath()+"/hosts.tmp";
     public InputStream input = null;
     public InputStream host2 = null;
 
@@ -186,7 +186,7 @@ public class MainKhampf extends Activity {
                         //creo backup
                         Shell.SU.run("mv \"/etc/hosts\" \"/etc/hosts.AdCatch\"");
                         //sposto il tmp nella cartella di sistema
-                        Shell.SU.run("mv \"/mnt/sdcard/hosts.tmp\" \"/etc/hosts\"");
+                        Shell.SU.run("mv \""+temp+"\" \"/etc/hosts\"");
 
                         runOnUiThread(new Runnable() {
                             public void run() {
