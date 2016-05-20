@@ -12,7 +12,7 @@ As the PC version, host file update itself when app is started
 p.s. i am NOT responsible for any damages. If you will contact me
      saying "i melted my Phone" i will only laugh. a lot.
 
-***IMAGES ARE COMING
+![AdCatch](http://i.imgur.com/EBuHI26.png)
 
 
 ### INSTALL 
