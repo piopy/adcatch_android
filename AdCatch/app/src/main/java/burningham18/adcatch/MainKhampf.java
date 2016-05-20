@@ -4,31 +4,24 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 
-import burningham18.adcatch.Shell;
 
 
 public class MainKhampf extends Activity {
     public Button start, stop, about, exit;
     final String original = "/etc/hosts";
     final String backup = "/etc/hosts.AdCatch";
-    final String temp = Environment.getExternalStorageDirectory().getPath()+"/hosts.tmp";
+    public String temp = "/storage/emulated/legacy/hosts.tmp";
     public InputStream input = null;
     public InputStream host2 = null;
 
@@ -42,7 +35,8 @@ public class MainKhampf extends Activity {
         about=(Button) findViewById(R.id.about);
         exit=(Button) findViewById(R.id.exit);
 
-
+        File test2=new File("/storage/emulated/legacy");
+        if(!test2.isDirectory()) this.temp="/etc/hosts.tmp";
 
         (new StartUp()).execute("update");
 
@@ -90,7 +84,7 @@ public class MainKhampf extends Activity {
         private Context context = null;
         boolean suAvailable = false;
 
-         public StartUp setContext(Context context) {
+        public StartUp setContext(Context context) {
             this.context = context;
             return this;
         }
@@ -126,6 +120,30 @@ public class MainKhampf extends Activity {
         }
 
 
+        public InputStream silentUpdate()  {
+            URL url = null;
+            HttpURLConnection conn = null;
+            try {
+                url = new URL("http://someonewhocares.org/hosts/hosts");
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setReadTimeout(10000 /* milliseconds */);
+                conn.setConnectTimeout(15000 /* milliseconds */);
+                conn.setRequestMethod("GET");
+                conn.setDoInput(true);
+                conn.connect();
+                host2 = conn.getInputStream();
+
+
+                return host2;
+            }
+            catch (Exception e) {
+
+                return null;
+            }
+
+        }
+
+
         public InputStream tryUpdate()  {
             URL url = null;
             HttpURLConnection conn = null;
@@ -139,12 +157,12 @@ public class MainKhampf extends Activity {
                 conn.connect();
                 host2 = conn.getInputStream();
 
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    Toast.makeText(getApplicationContext(), "Host file successfully updated!", Toast.LENGTH_SHORT).show();
-                }
-            });
-            return host2;
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), "Host file successfully updated!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return host2;
             }
             catch (Exception e) {
                 runOnUiThread(new Runnable() {
@@ -153,17 +171,19 @@ public class MainKhampf extends Activity {
 
                     }
                 });
+                return null;
             }
 
-            return null;
         }
 
         protected void start(){
-            boolean working=false;
+
 
             if(suAvailable){
 
                 File f = new File(backup);
+                File tem=new File(temp);
+                if(tem.exists())  Shell.SU.run("rm "+temp);
                 if(!f.exists() && !f.isDirectory()) {
 
 
@@ -171,8 +191,9 @@ public class MainKhampf extends Activity {
                     try {
                         //host to temp
                         input = getApplicationContext().getResources().openRawResource(R.raw.host);
-                        input.close();
+
                         if(input==null) throw new IOException();
+                        System.out.println("nessuna eccezione");
                         if(host2!=null) input=host2;
                         FileOutputStream outputStream =
                                 new FileOutputStream(new File(temp));
@@ -182,18 +203,29 @@ public class MainKhampf extends Activity {
                         while ((read = input.read(bytes)) != -1) {
                             outputStream.write(bytes, 0, read);
                         }
-                        //
+
+                        input.close(); outputStream.close();
+
+                        //modifico i permessi della cartella system
+                        Shell.SU.run("mount -o remount,rw /system ");
+                        //Shell.SU.run("chmod 777 \""+Environment.getExternalStorageDirectory().getPath()+"/hosts.tmp\"");
                         //creo backup
                         Shell.SU.run("mv \"/etc/hosts\" \"/etc/hosts.AdCatch\"");
                         //sposto il tmp nella cartella di sistema
                         Shell.SU.run("mv \""+temp+"\" \"/etc/hosts\"");
+
+                        //back to normal permissions
+                        Shell.SU.run("mount -o remount,ro /system ");
+
 
                         runOnUiThread(new Runnable() {
                             public void run() {
                                 Toast.makeText(getApplicationContext(), "DONE!", Toast.LENGTH_SHORT).show();
                             }
                         });
-                    } catch (IOException e) {
+
+                        host2=silentUpdate();
+                    } catch (Exception e) {
                         runOnUiThread(new Runnable() {
                             public void run() {
                                 Toast.makeText(getApplicationContext(), "Can't open host file", Toast.LENGTH_SHORT).show();
@@ -229,6 +261,8 @@ public class MainKhampf extends Activity {
 
                 File f = new File(backup);
                 if(f.exists() && !f.isDirectory()){
+                    //modifico i permessi system
+                    Shell.SU.run("mount -o remount,rw /system ");
                     //ho il root, il backup esiste
                     //sostituisco l' host modificato con l' originale
                     Shell.SU.run("mv \"/etc/hosts.AdCatch\" \"/etc/hosts\"");
@@ -237,6 +271,7 @@ public class MainKhampf extends Activity {
                             Toast.makeText(getApplicationContext(), "DONE!", Toast.LENGTH_SHORT).show();
                         }
                     });
+                    Shell.SU.run("mount -o remount,ro /system ");
                 }
                 else {
                     runOnUiThread(new Runnable() {
@@ -244,7 +279,7 @@ public class MainKhampf extends Activity {
                             Toast.makeText(getApplicationContext(),"Service already stopped!",Toast.LENGTH_SHORT).show();
                         }
                     });
-                     }
+                }
 
             }
             else{
@@ -273,17 +308,25 @@ public class MainKhampf extends Activity {
             if(suAvailable){
                 File f = new File(backup);
                 if(f.exists() && !f.isDirectory()){
+                    //modifico i permessi system
+                    Shell.SU.run("mount -o remount,rw /system ");
                     //ho il root, il backup esiste
                     //sostituisco l' host modificato con l' originale
                     Shell.SU.run("mv \"/etc/hosts.AdCatch\" \"/etc/hosts\"");
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), "DONE!", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    Shell.SU.run("mount -o remount,ro /system ");
                 }
                 about();
                 finish();
                 System.exit(0);
             }
             else{about();
-            finish();
-            System.exit(0);}
+                finish();
+                System.exit(0);}
         }
 
     }
